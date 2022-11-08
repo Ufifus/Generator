@@ -66,11 +66,6 @@ def load_tensor_img(path_to_img):
 def load_model():
     hub_model = hub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
     return hub_model
-@st.cache
-def plot_final(original_img, style_img):
-    stylized_image = hub_model(tf.constant(content_image), tf.constant(style_image))[0]
-    final_img = tensor_to_image(stylized_image)
-    return final_img
 
 if __name__ == '__main__':
 
