@@ -62,6 +62,15 @@ def load_tensor_img(path_to_img):
     img = tf.image.convert_image_dtype(img, tf.float32)
     return img
 
+
+def ploting_final(origin_tensor, style_tensor):
+    st.subheader('Результат')
+    stylized_image = hub_model(tf.constant(origin_tensor), tf.constant(style_tensor))[0]
+    final_img = tensor_to_image(stylized_image)
+    st.image(final_img)
+
+
+
 @st.cache
 def load_model():
     hub_model = hub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
@@ -70,20 +79,6 @@ def load_model():
 if __name__ == '__main__':
 
     st.markdown(page_style, unsafe_allow_html=True)
-
-    instructions = """
-        Нейронный перенос стиля — это метод, использующий два изображения — 
-        изображения контента и эталонного изображения стиля 
-        (например, произведения искусства известного художника) — 
-        и их смешивания вместе, чтобы выходное изображение выглядело 
-        как изображение контента, но «нарисовано» в стиле эталонного изображения стиля.
-
-        Это реализуется путем обработки выходного изображения для 
-        соответствия статистике содержимого изображения содержимого и 
-        статистике стиля эталонного изображения стиля. 
-        Эта статистика извлекается из изображений с помощью нейронной сверточной сети.
-        """
-    st.write(instructions)
 
     hub_model = load_model()
 
@@ -99,6 +94,16 @@ if __name__ == '__main__':
             st.image(origin_img, 'Оригинал')
             origin_tensor = preprocess_img(origin_img)
             ready_origin = True
+        else:
+            img = '325px-Kramskoy_Portrait_of_a_Woman.jpg'
+            img_path = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Kramskoy_Portrait_of_a_Woman.jpg/325px-Kramskoy_Portrait_of_a_Woman.jpg'
+
+            content_path = tf.keras.utils.get_file(img, img_path)
+            st.image(content_path)
+
+            content_image = load_img(content_path)
+            origin_tensor = preprocess_img(content_image)
+
 
     with style:
         style_img = st.file_uploader('Загрузите стиль')
@@ -108,28 +113,7 @@ if __name__ == '__main__':
             st.image(style_img, 'Стиль')
             style_tensor = preprocess_img(style_img)
             ready_style = True
-
-    if ready_origin and ready_style:
-        st.subheader('Результат')
-        stylized_image = hub_model(tf.constant(origin_tensor), tf.constant(style_tensor))[0]
-        final_img = tensor_to_image(stylized_image)
-
-        st.image(final_img)
-
-    elif not ready_style and  not ready_origin:
-        with original:
-            img = '325px-Kramskoy_Portrait_of_a_Woman.jpg'
-            img_path = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Kramskoy_Portrait_of_a_Woman.jpg/325px-Kramskoy_Portrait_of_a_Woman.jpg'
-
-            content_path = tf.keras.utils.get_file(img, img_path)
-            st.image(content_path)
-
-            content_image = load_img(content_path)
-            content_image = preprocess_img(content_image)
-
-            # imshow(content_image, 'Оригинал')
-
-        with style:
+        else:
             style = 'Vassily_Kandinsky%2C_1913_-_Composition_7.jpg'
             style_path = 'https://storage.googleapis.com/download.tensorflow.org/example_images/Vassily_Kandinsky%2C_1913_-_Composition_7.jpg'
 
@@ -137,14 +121,7 @@ if __name__ == '__main__':
             st.image(style_path, )
 
             style_image = load_img(style_path)
-            style_image = preprocess_img(style_image)
+            style_tensor = preprocess_img(style_image)
 
-            # imshow(content_image, 'Оригинал')
-
-        st.subheader('Результат')
-
-
-        stylized_image = hub_model(tf.constant(content_image), tf.constant(style_image))[0]
-        final_img = tensor_to_image(stylized_image)
-
-        st.image(final_img)
+    with st.form(key='Ploting'):
+        st.form_submit_button('Ploting', on_click=ploting_final(origin_tensor, style_tensor))
